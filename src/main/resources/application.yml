@@ -33,3 +33,11 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.maidada.mddpicturebackend.controller
+
+cos:
+  client:
+    host: https://mdd-picture-1312856015.cos.ap-chongqing.myqcloud.com
+    secretId: ${COS_AK}
+    secretKey: ${COS_SK}
+    region: ap-chongqing
+    bucket: mdd-picture-1312856015
