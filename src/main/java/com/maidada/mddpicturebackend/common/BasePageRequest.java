@@ -11,7 +11,7 @@ public class BasePageRequest {
     /**
      * 当前页号
      */
-    private int current = 1;
+    private int pageNo = 1;
 
     /**
      * 页面大小
