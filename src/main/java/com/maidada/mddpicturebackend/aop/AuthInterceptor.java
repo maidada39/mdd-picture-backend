@@ -5,7 +5,7 @@ import com.maidada.mddpicturebackend.enums.UserRoleEnum;
 import com.maidada.mddpicturebackend.exception.ErrorCode;
 import com.maidada.mddpicturebackend.exception.ThrowUtils;
 import com.maidada.mddpicturebackend.service.UserService;
-import com.maidada.mddpicturebackend.vo.UserLoginVO;
+import com.maidada.mddpicturebackend.vo.user.UserLoginVO;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

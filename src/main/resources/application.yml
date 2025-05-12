@@ -11,6 +11,9 @@ spring:
     url: ${DB_URL}/mdd_picture
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  servlet:
+    multipart:
+      max-file-size: 10MB
 
 mybatis-plus:
   configuration:

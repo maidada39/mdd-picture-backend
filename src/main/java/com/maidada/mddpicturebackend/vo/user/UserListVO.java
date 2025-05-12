@@ -1,17 +1,17 @@
-package com.maidada.mddpicturebackend.vo;
+package com.maidada.mddpicturebackend.vo.user;
 
 import lombok.Data;
 
 import java.util.Date;
 
 /**
- * [用户]登录视图
+ * [用户]列表视图
  *
  * @author wulinxuan
  * @date 2025-05-11 01:30
  */
 @Data
-public class UserLoginVO {
+public class UserListVO {
 
     /**
      * id

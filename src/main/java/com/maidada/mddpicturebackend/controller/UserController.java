@@ -8,13 +8,13 @@ import com.maidada.mddpicturebackend.common.BaseResponse;
 import com.maidada.mddpicturebackend.common.ResultUtils;
 import com.maidada.mddpicturebackend.dto.user.*;
 import com.maidada.mddpicturebackend.enums.UserRoleEnum;
-import com.maidada.mddpicturebackend.vo.UserLoginVO;
+import com.maidada.mddpicturebackend.vo.user.UserLoginVO;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.maidada.mddpicturebackend.service.UserService;
-import com.maidada.mddpicturebackend.vo.UserDetailVO;
-import com.maidada.mddpicturebackend.vo.UserListVO;
+import com.maidada.mddpicturebackend.vo.user.UserDetailVO;
+import com.maidada.mddpicturebackend.vo.user.UserListVO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,24 +33,46 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * 注册用户
+     *
+     * @param param 参数
+     * @return {@link BaseResponse }<{@link Long }>
+     */
     @PostMapping("/register")
     public BaseResponse<Long> registerUser(@Valid @RequestBody UserRegisterRequest param) {
         long result = userService.userRegister(param);
         return ResultUtils.success(result);
     }
 
+    /**
+     * 登录用户
+     *
+     * @param param 参数
+     * @return {@link BaseResponse }<{@link UserLoginVO }>
+     */
     @PostMapping("/login")
     public BaseResponse<UserLoginVO> loginUser(@Valid @RequestBody UserLoginRequest param) {
         UserLoginVO result = userService.userLogin(param);
         return ResultUtils.success(result);
     }
 
+    /**
+     * 获取登录用户
+     *
+     * @return {@link BaseResponse }<{@link UserLoginVO }>
+     */
     @GetMapping("/get/login")
     public BaseResponse<UserLoginVO> getLoginUser() {
         UserLoginVO result = userService.getLoginUser();
         return ResultUtils.success(result);
     }
 
+    /**
+     * 注销用户
+     *
+     * @return {@link BaseResponse }<{@link Boolean }>
+     */
     @GetMapping("/logout")
     public BaseResponse<Boolean> logoutUser() {
         Boolean result = userService.logoutUser();

@@ -2,14 +2,13 @@ package com.maidada.mddpicturebackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.maidada.mddpicturebackend.annotation.AuthCheck;
 import com.maidada.mddpicturebackend.common.BaseRequest;
 import com.maidada.mddpicturebackend.dto.user.*;
 import com.maidada.mddpicturebackend.enums.UserRoleEnum;
 import com.maidada.mddpicturebackend.exception.ErrorCode;
 import com.maidada.mddpicturebackend.exception.ThrowUtils;
 import com.maidada.mddpicturebackend.util.SpringContextUtils;
-import com.maidada.mddpicturebackend.vo.UserLoginVO;
+import com.maidada.mddpicturebackend.vo.user.UserLoginVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +17,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.maidada.mddpicturebackend.mapper.UserMapper;
 import com.maidada.mddpicturebackend.entity.User;
-import com.maidada.mddpicturebackend.vo.UserDetailVO;
-import com.maidada.mddpicturebackend.vo.UserListVO;
+import com.maidada.mddpicturebackend.vo.user.UserDetailVO;
+import com.maidada.mddpicturebackend.vo.user.UserListVO;
 import com.maidada.mddpicturebackend.service.UserService;
 
 import lombok.RequiredArgsConstructor;

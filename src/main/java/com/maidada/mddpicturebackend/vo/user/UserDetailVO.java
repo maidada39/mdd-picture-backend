@@ -1,4 +1,4 @@
-package com.maidada.mddpicturebackend.vo;
+package com.maidada.mddpicturebackend.vo.user;
 
 import lombok.Data;
 

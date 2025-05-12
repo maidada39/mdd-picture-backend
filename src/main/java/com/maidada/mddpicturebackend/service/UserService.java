@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.maidada.mddpicturebackend.common.BaseRequest;
 import com.maidada.mddpicturebackend.dto.user.*;
 import com.maidada.mddpicturebackend.entity.User;
-import com.maidada.mddpicturebackend.vo.UserDetailVO;
-import com.maidada.mddpicturebackend.vo.UserListVO;
-import com.maidada.mddpicturebackend.vo.UserLoginVO;
+import com.maidada.mddpicturebackend.vo.user.UserDetailVO;
+import com.maidada.mddpicturebackend.vo.user.UserListVO;
+import com.maidada.mddpicturebackend.vo.user.UserLoginVO;
 
 import javax.validation.Valid;
 
