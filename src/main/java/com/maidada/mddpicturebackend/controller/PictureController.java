@@ -49,6 +49,19 @@ public class PictureController {
         return ResultUtils.success(result);
     }
 
+    /**
+     * 上传图片(url)
+     *
+     * @param param 参数
+     * @return {@link BaseResponse }<{@link PictureVO }>
+     */
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
+    @PostMapping("/upload/url")
+    public BaseResponse<PictureVO> uploadPictureByUrl(@Valid PictureUploadRequest param) {
+        PictureVO result = pictureService.upload(param.getUrl(), param);
+        return ResultUtils.success(result);
+    }
+
     @PostMapping("/delete")
     public BaseResponse<String> deletePicture(@Valid @RequestBody BaseRequest param) {
         pictureService.delete(param);

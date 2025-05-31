@@ -1,4 +1,4 @@
-package com.maidada.mddpicturebackend.manager;
+package com.maidada.mddpicturebackend.manager.upload;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -7,48 +7,33 @@ import com.maidada.mddpicturebackend.config.CosClientConfig;
 import com.maidada.mddpicturebackend.dto.file.UploadPictureResult;
 import com.maidada.mddpicturebackend.exception.BusinessException;
 import com.maidada.mddpicturebackend.exception.ErrorCode;
-import com.maidada.mddpicturebackend.exception.ThrowUtils;
-import com.qcloud.cos.COSClient;
-import com.qcloud.cos.model.COSObject;
+import com.maidada.mddpicturebackend.manager.CosManager;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
-
-/**
- * @author wulinxuan
- * @date 2025/5/12 20:01
- */
 @Slf4j
-@Component
-@Deprecated
-public class FileManager {
+public abstract class PicutreUploadTemplate {
 
     @Resource
     private CosClientConfig cosClientConfig;
 
     @Resource
-    private COSClient cosClient;
-
-    @Resource
     private CosManager cosManager;
 
-    public UploadPictureResult uploadPicture(MultipartFile file, String prefix) {
+    public UploadPictureResult uploadPicture(Object inputSource, String prefix) {
         // 检验图片
-        validPicture(file);
+        validPicture(inputSource);
 
-        // 上传地址拼接
-        String originalFileName = file.getOriginalFilename();
+        // 获取文件名
+        String originalFileName = getOriginFileName(inputSource);
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String date = DateUtil.format(new Date(), "yyyy-MM-dd");
         String suffix = FileUtil.getSuffix(originalFileName);
@@ -59,7 +44,8 @@ public class FileManager {
         File uploadFile = null;
         try {
             uploadFile = File.createTempFile(uploadFilePath, null);
-            file.transferTo(uploadFile);
+            // 处理文件
+            processsFile(inputSource, uploadFile);
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadFilePath, uploadFile);
             // 获取图片信息
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
@@ -74,34 +60,27 @@ public class FileManager {
             result.setPicFormat(suffix);
 
             return result;
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("上传文件失败: {}", originalFileName, e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传文件失败");
         } finally {
-            deleteFile(uploadFile);
+            this.deleteTempFile(uploadFile);
         }
     }
 
-    private void validPicture(MultipartFile file) {
-        // 非空判断
-        ThrowUtils.throwIf(file == null, ErrorCode.PARAMS_ERROR, "文件不能为空");
-        // 大小判断
-        final long ONE_MB = 1024 * 1024;
-        ThrowUtils.throwIf(file.getSize() > 2 * ONE_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过2MB");
-        // 格式判断
-        String suffix = FileUtil.getSuffix(file.getOriginalFilename());
-        final List<String> allowFileType = Arrays.asList("jpg", "jpeg", "png", "gif", "webp");
-        ThrowUtils.throwIf(!allowFileType.contains(suffix), ErrorCode.PARAMS_ERROR, "文件格式错误");
-    }
-
-    private void deleteFile(File file) {
-        if (file == null) {
+    private void deleteTempFile(File uploadFile) {
+        if (uploadFile == null) {
             return;
         }
-
-        boolean deleted = file.delete();
+        boolean deleted = uploadFile.delete();
         if (!deleted) {
-            log.error("文件删除失败: {}", file.getAbsolutePath());
+            log.error("删除临时文件失败: {}", uploadFile.getAbsolutePath());
         }
     }
+
+    protected abstract void processsFile(Object inputSource, File uploadFile) throws Exception;
+
+    protected abstract String getOriginFileName(Object inputSource);
+
+    protected abstract void validPicture(Object inputSource);
 }

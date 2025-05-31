@@ -5,9 +5,13 @@ import java.util.Objects;
 
 import com.maidada.mddpicturebackend.common.BaseRequest;
 import com.maidada.mddpicturebackend.dto.file.UploadPictureResult;
+import com.maidada.mddpicturebackend.exception.BusinessException;
 import com.maidada.mddpicturebackend.exception.ErrorCode;
 import com.maidada.mddpicturebackend.exception.ThrowUtils;
 import com.maidada.mddpicturebackend.manager.FileManager;
+import com.maidada.mddpicturebackend.manager.upload.FilePictureUpload;
+import com.maidada.mddpicturebackend.manager.upload.PicutreUploadTemplate;
+import com.maidada.mddpicturebackend.manager.upload.UrlPictureUpload;
 import com.maidada.mddpicturebackend.service.UserService;
 import com.maidada.mddpicturebackend.vo.picture.PictureVO;
 import com.maidada.mddpicturebackend.vo.user.UserLoginVO;
@@ -53,10 +57,16 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
     @Resource
     private UserService userService;
 
+    @Resource
+    private FilePictureUpload  filePictureUpload;
+
+    @Resource
+    private UrlPictureUpload urlPictureUpload;
+
     @Override
-    public PictureVO upload(MultipartFile multipartFile, PictureUploadRequest param) {
+    public PictureVO upload(Object inputSource, PictureUploadRequest param) {
         // 校验
-        ThrowUtils.throwIf(Objects.isNull(multipartFile), ErrorCode.PARAMS_ERROR, "图片文件不能为空");
+        ThrowUtils.throwIf(Objects.isNull(inputSource), ErrorCode.PARAMS_ERROR, "图片文件不能为空");
 
         // 如果传递了id表示更新操作，判断是否存在
         Long id = param.getId();
@@ -68,7 +78,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         // 上传文件
         UserLoginVO loginUser = userService.getLoginUser();
         String prefix = String.format("public/%s", loginUser.getId());
-        UploadPictureResult uploadPictureResult = fileManager.uploadPicture(multipartFile, prefix);
+        PicutreUploadTemplate uploadTemplate;
+        if (inputSource instanceof String) {
+            uploadTemplate =  urlPictureUpload;
+        } else if (inputSource instanceof MultipartFile) {
+            uploadTemplate = filePictureUpload;
+        } else {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件类型异常");
+        }
+        UploadPictureResult uploadPictureResult = uploadTemplate.uploadPicture(inputSource, prefix);
 
         // 字段填充
         Picture entity = new Picture();

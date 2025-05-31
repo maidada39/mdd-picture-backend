@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface PictureService extends IService<Picture> {
 
-    PictureVO upload(MultipartFile multipartFile, PictureUploadRequest param);
+    PictureVO upload(Object inputSource, PictureUploadRequest param);
 
     void delete(BaseRequest param);
 

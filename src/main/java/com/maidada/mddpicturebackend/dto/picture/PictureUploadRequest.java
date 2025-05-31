@@ -17,4 +17,9 @@ public class PictureUploadRequest {
      * id
      */
     private Long id;
+
+    /**
+     * 上传的url
+     */
+    private String url;
 }
