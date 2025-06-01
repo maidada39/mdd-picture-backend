@@ -7,6 +7,7 @@ import com.maidada.mddpicturebackend.common.BaseResponse;
 import com.maidada.mddpicturebackend.common.ResultUtils;
 import com.maidada.mddpicturebackend.dto.picture.PicturePageRequest;
 import com.maidada.mddpicturebackend.dto.picture.PictureUpdateRequest;
+import com.maidada.mddpicturebackend.dto.picture.PictureUploadByBatchRequest;
 import com.maidada.mddpicturebackend.dto.picture.PictureUploadRequest;
 import com.maidada.mddpicturebackend.enums.UserRoleEnum;
 import com.maidada.mddpicturebackend.service.PictureService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * [图片]控制层
@@ -59,6 +61,19 @@ public class PictureController {
     @PostMapping("/upload/url")
     public BaseResponse<PictureVO> uploadPictureByUrl(@Valid PictureUploadRequest param) {
         PictureVO result = pictureService.upload(param.getUrl(), param);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 批量抓取
+     *
+     * @param param 参数
+     * @return {@link BaseResponse }<{@link PictureVO }>
+     */
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
+    @PostMapping("/search/batch")
+    public BaseResponse<Integer> batchSearchPicture(@Valid PictureUploadByBatchRequest param) {
+        Integer result = pictureService.batchSearch(param);
         return ResultUtils.success(result);
     }
 

@@ -3,6 +3,7 @@ package com.maidada.mddpicturebackend.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.maidada.mddpicturebackend.common.BaseRequest;
+import com.maidada.mddpicturebackend.dto.picture.PictureUploadByBatchRequest;
 import com.maidada.mddpicturebackend.dto.picture.PictureUploadRequest;
 import com.maidada.mddpicturebackend.dto.picture.PicturePageRequest;
 import com.maidada.mddpicturebackend.dto.picture.PictureUpdateRequest;
@@ -11,6 +12,9 @@ import com.maidada.mddpicturebackend.vo.picture.PictureDetailVO;
 import com.maidada.mddpicturebackend.vo.picture.PicturePageVO;
 import com.maidada.mddpicturebackend.vo.picture.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
+import java.util.List;
 
 /**
  * [图片]服务接口
@@ -21,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface PictureService extends IService<Picture> {
 
     PictureVO upload(Object inputSource, PictureUploadRequest param);
+
+    Integer batchSearch(@Valid PictureUploadByBatchRequest param);
 
     void delete(BaseRequest param);
 

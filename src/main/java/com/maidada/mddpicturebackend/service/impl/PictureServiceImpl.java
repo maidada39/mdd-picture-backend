@@ -1,10 +1,16 @@
 package com.maidada.mddpicturebackend.service.impl;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.maidada.mddpicturebackend.common.BaseRequest;
 import com.maidada.mddpicturebackend.dto.file.UploadPictureResult;
+import com.maidada.mddpicturebackend.dto.picture.PictureUploadByBatchRequest;
 import com.maidada.mddpicturebackend.exception.BusinessException;
 import com.maidada.mddpicturebackend.exception.ErrorCode;
 import com.maidada.mddpicturebackend.exception.ThrowUtils;
@@ -15,6 +21,10 @@ import com.maidada.mddpicturebackend.manager.upload.UrlPictureUpload;
 import com.maidada.mddpicturebackend.service.UserService;
 import com.maidada.mddpicturebackend.vo.picture.PictureVO;
 import com.maidada.mddpicturebackend.vo.user.UserLoginVO;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -108,6 +118,57 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         ThrowUtils.throwIf(!result, ErrorCode.SYSTEM_ERROR, "上传失败，操作数据库失败");
 
         return PictureVO.objToVo(entity);
+    }
+
+    @Override
+    public Integer batchSearch(PictureUploadByBatchRequest param) {
+        // 抓取内容
+        String fetchUrl = String.format("https://cn.bing.com/images/async?q=%s&mmasync=1", param.getSearchText());
+        Document document;
+        try {
+            document = Jsoup.connect(fetchUrl).get();
+        } catch (IOException e) {
+            log.error("获取页面失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取页面失败");
+        }
+        // 解析内容
+        Element div = document.getElementsByClass("dgControl").first();
+        if (ObjUtil.isEmpty(div)) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
+        }
+        Elements imgElementList = div.select("img.mimg");
+
+        // 遍历元素，依次处理上传图片
+        int uploadCount = 0;
+        Integer count = param.getCount();
+        for (Element imgElement : imgElementList) {
+            String fileUrl = imgElement.attr("src");
+            if (StrUtil.isBlank(fileUrl)) {
+                log.info("当前链接为空，已跳过：{}", fileUrl);
+                continue;
+            }
+            // 处理图片的地址，防止转义或者和对象存储冲突的问题
+            // codefather.cn?yupi=dog，应该只保留 codefather.cn
+            int questionMarkIndex = fileUrl.indexOf("?");
+            if (questionMarkIndex > -1) {
+                fileUrl = fileUrl.substring(0, questionMarkIndex);
+            }
+            // 上传图片
+            PictureUploadRequest pictureUploadRequest = new PictureUploadRequest();
+            pictureUploadRequest.setUrl(fileUrl);
+            try {
+                PictureVO pictureVO = this.upload(fileUrl, pictureUploadRequest);
+                log.info("图片上传成功，id = {}", pictureVO.getId());
+                uploadCount++;
+            } catch (Exception e) {
+                log.error("图片上传失败", e);
+                continue;
+            }
+            if (uploadCount >= count) {
+                break;
+            }
+        }
+        return uploadCount;
     }
 
     @Override
