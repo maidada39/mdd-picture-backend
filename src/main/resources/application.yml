@@ -11,6 +11,13 @@ spring:
     url: ${DB_URL}/mdd_picture
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  # Redis 配置
+  redis:
+    database: 0
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    timeout: 5000
+    password: ${REDIS_PASSWORD}
   servlet:
     multipart:
       max-file-size: 10MB

@@ -1,13 +1,19 @@
 package com.maidada.mddpicturebackend.service.impl;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.maidada.mddpicturebackend.common.BaseRequest;
 import com.maidada.mddpicturebackend.dto.file.UploadPictureResult;
 import com.maidada.mddpicturebackend.dto.picture.PictureUploadByBatchRequest;
@@ -26,6 +32,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -44,6 +51,7 @@ import com.maidada.mddpicturebackend.service.PictureService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -72,6 +80,19 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    /**
+     * 本地缓存
+     */
+    private final Cache<String, String> LOCAL_CACHE = Caffeine.newBuilder()
+            .initialCapacity(1024)
+            .maximumSize(10_000L) // 最大 10000 条
+            // 缓存 5 分钟后移除
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .build();
 
     @Override
     public PictureVO upload(Object inputSource, PictureUploadRequest param) {
@@ -208,15 +229,42 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
     public IPage<PicturePageVO> queryPage(PicturePageRequest param) {
         IPage<Picture> page = new Page<>(param.getPageNo(), param.getPageSize());
 
+        // 查询缓存没有在查询数据库
+        String condition = JSONUtil.toJsonStr(param);
+        condition = DigestUtils.md5DigestAsHex(condition.getBytes());
+        String key = String.format("mddpicutre:picutre:page:%s", condition);
+        String cache;
+        // 先查本地缓存
+        cache = LOCAL_CACHE.getIfPresent(key);
+        if (cache != null) {
+            log.info("从本地缓存中获取数据,查询条件: {}", condition);
+            return JSONUtil.toBean(cache, Page.class);
+        }
+        // 再差分布式缓存
+        cache = stringRedisTemplate.opsForValue().get(key);
+         if (cache != null) {
+            log.info("从分布式缓存中获取数据,查询条件: {}", condition);
+            Page<PicturePageVO> result = JSONUtil.toBean(cache, Page.class);
+            // 写入本地缓存
+            LOCAL_CACHE.put(key, JSONUtil.toJsonStr(result));
+
+            return result;
+        }
+
         // 查询条件
         LambdaQueryWrapper<Picture> wrapper = Wrappers.lambdaQuery();
-
         // 查询数据并转换
         IPage<Picture> pageResult = page(page, wrapper);
-        return pageResult.convert(item -> {
+        IPage<PicturePageVO> result = pageResult.convert(item -> {
             PicturePageVO vo = new PicturePageVO();
             BeanUtils.copyProperties(item, vo);
             return vo;
         });
+
+        // 缓存，设置随机过期时间，防止缓存雪崩
+        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(result), 300 + RandomUtil.randomInt(0, 300), TimeUnit.SECONDS);
+        LOCAL_CACHE.put(key, JSONUtil.toJsonStr(result));
+
+        return result;
     }
 }

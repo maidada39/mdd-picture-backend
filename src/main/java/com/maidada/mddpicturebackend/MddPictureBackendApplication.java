@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 @SpringBootApplication
-@MapperScan("com.maidada.mddpicturebackend.mapper")
 @EnableAspectJAutoProxy(exposeProxy = true)
 public class MddPictureBackendApplication {
 
